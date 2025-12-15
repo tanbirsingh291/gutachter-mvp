@@ -1,82 +1,60 @@
-# Update erzwingen
 import streamlit as st
 import google.generativeai as genai
 import tempfile
 import os
+import traceback
 
-# Seite konfigurieren
-st.set_page_config(page_title="Kfz-Gutachter AI (Gemini)", page_icon="🚗")
+st.set_page_config(page_title="Debug Modus", page_icon="🛠️")
+st.title("🛠️ Diagnose-Modus")
 
-# Header
-st.title("🚗 {g}ai-solutions: Gutachter-Assistent")
-st.caption("Powered by Google Gemini 1.5 Flash")
-
-# API Key Setup
-# Lokal: Entweder in .env oder direkt hier (für lokale Tests)
-# In Streamlit Cloud: In den Secrets als GOOGLE_API_KEY hinterlegen
+# SCHRITT 1: API Key prüfen
+st.subheader("1. API Key Check")
 try:
     api_key = st.secrets["GOOGLE_API_KEY"]
-except:
-    # Fallback für lokales Testen (nicht empfohlen für Git-Upload!)
-    api_key = "DEIN_GEMINI_API_KEY_HIER_EINFÜGEN"
-
-if not api_key:
-    st.error("Bitte API Key hinterlegen.")
+    # Wir zeigen nur die ersten 4 Zeichen zur Sicherheit
+    st.success(f"✅ Key gefunden: {api_key[:4]}...*******")
+    genai.configure(api_key=api_key)
+except Exception as e:
+    st.error(f"❌ Kein API Key in den Secrets gefunden!\nFehler: {e}")
     st.stop()
 
-genai.configure(api_key=api_key)
+# SCHRITT 2: Google Verbindung testen (nur Text)
+st.subheader("2. Google Verbindung (Text)")
+if st.button("Verbindung testen"):
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content("Antworte nur mit dem Wort: 'Verbunden'")
+        st.success(f"✅ Google antwortet: {response.text}")
+    except Exception as e:
+        st.error(f"❌ Google Verbindung fehlgeschlagen!")
+        st.code(traceback.format_exc()) # Zeigt den genauen Fehler
 
-# Modell wählen (Flash ist super schnell und günstig)
-model = genai.GenerativeModel('gemini-1.5-flash')
-
-# 1. Audio Aufnahme
-audio_value = st.audio_input("Schaden jetzt einsprechen (Mikrofon)")
+# SCHRITT 3: Audio Test
+st.subheader("3. Audio & Verarbeitung")
+audio_value = st.audio_input("Sprich etwas kurz ein...")
 
 if audio_value:
-    st.info("Audio wird verarbeitet... Gemini hört zu 🧠")
-    
+    st.info("Audio empfangen. Sende an Google...")
     try:
-        # Streamlit liefert Bytes, Gemini braucht eine Datei. 
-        # Wir speichern temporär zwischen.
+        # Temporäre Datei anlegen
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
             tmp_file.write(audio_value.read())
             tmp_file_path = tmp_file.name
-
-        # Datei zu Google hochladen
+        
+        # Hochladen
         myfile = genai.upload_file(tmp_file_path)
         
-        # Der Prompt für den Gutachter-Stil
-        prompt = """
-        Du bist ein erfahrener Kfz-Sachverständiger in Deutschland.
-        Höre dir diese Audioaufnahme genau an. Sie enthält Notizen zu einem Unfallschaden.
+        # Generieren
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(["Was wurde gesagt?", myfile])
         
-        Deine Aufgabe:
-        Erstelle daraus ein professionelles, strukturiertes Gutachten.
+        st.success("✅ Erfolg!")
+        st.write(response.text)
         
-        Anforderungen:
-        1. Formuliere alles im Passiv und im neutralen Sachverständigen-Stil (z.B. "Der Kotflügel weist eine Verformung auf" statt "Der Kotflügel ist kaputt").
-        2. Verwende Fachbegriffe (Lackierung, Instandsetzung, Erneuerung).
-        3. Strukturiere das Ergebnis in:
-           - Fahrzeugdaten (falls im Audio genannt)
-           - Schadensbeschreibung (detailliert)
-           - Reparaturempfehlung
-        
-        Gib NUR das fertige Gutachten aus, kein Vorgeplänkel.
-        """
-
-        # Generierung starten (Audio + Text Prompt)
-        with st.spinner("Gutachten wird geschrieben..."):
-            response = model.generate_content([prompt, myfile])
-            
-        # Ergebnis anzeigen
-        st.subheader("📝 Generierter Bericht")
-        st.markdown(response.text)
-        
-        # Download
-        st.download_button("Bericht speichern", response.text, file_name="gutachten_gemini.md")
-
-        # Aufräumen (Temporäre Datei löschen)
+        # Aufräumen
         os.unlink(tmp_file_path)
-
+        
     except Exception as e:
-        st.error(f"Ein Fehler ist aufgetreten: {e}")
+        st.error("❌ Fehler bei der Audio-Verarbeitung:")
+        # DAS HIER IST WICHTIG: Es zeigt dir den wahren Grund
+        st.code(traceback.format_exc())
