@@ -22,7 +22,7 @@ except Exception as e:
 st.subheader("2. Google Verbindung (Text)")
 if st.button("Verbindung testen"):
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
         response = model.generate_content("Antworte nur mit dem Wort: 'Verbunden'")
         st.success(f"✅ Google antwortet: {response.text}")
     except Exception as e:
