@@ -72,10 +72,10 @@ if audio_value:
         Analysiere diese Audioaufnahme (Unfallschaden-Diktat).
         
         Erstelle daraus ein professionelles Gutachten mit folgender Struktur:
-        1. 🚗 Fahrzeugdaten (falls genannt)
-        2. 💥 Schadensbeschreibung (Detailliert, Fachsprache nutzen, Passiv-Formulierungen wie "wurde beschädigt")
-        3. 🔧 Reparaturweg (Instandsetzung, Lackierung, Erneuerung)
-        4. 📋 Zusammenfassung
+        1. Fahrzeugdaten (falls genannt)
+        2. Schadensbeschreibung (Detailliert, Fachsprache nutzen, Passiv-Formulierungen wie "wurde beschädigt")
+        3. Reparaturweg (Instandsetzung, Lackierung, Erneuerung)
+        4. Zusammenfassung
         
         Wichtig: Schreibe sachlich, neutral und juristisch sauber.
         """
