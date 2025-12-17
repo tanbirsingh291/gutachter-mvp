@@ -52,7 +52,7 @@ class GutachtenPDF(FPDF):
 @st.cache_resource
 def get_available_model():
     # Wir nutzen Flash für Geschwindigkeit, aber Pro wäre für komplexe Formatierung besser
-    return 'models/gemini-1.5-flash'
+    return 'models/gemini-2.5-flash'
 
 model = genai.GenerativeModel(get_available_model())
 
